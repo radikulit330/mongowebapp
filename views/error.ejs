@@ -11,9 +11,12 @@
     <p>На жаль, сталася несподівана ситуація, або сторінку не знайдено.</p>
 
     <%# Показуємо деталі помилки тільки в режимі розробки %>
-    <% if (process.env.NODE_ENV === 'development' && locals.error) { %>
-        <pre class="error-stack"><code><%= error.stack %></code></pre>
+    <% if (process.env.NODE_ENV === 'development' && locals.error && locals.error.stack) { %>
+        <pre class="error-stack"><code><%- error.stack %></code></pre>
+    <% } else if (process.env.NODE_ENV === 'development' && locals.error && !locals.error.stack) { %>
+        <pre class="error-stack"><code><%- JSON.stringify(error, null, 2) %></code></pre>
     <% } %>
+
 
     <a href="/" class="button">
         <span class="material-symbols-outlined">home</span> Повернутися на головну
@@ -31,7 +34,7 @@
     }
     .error-icon .material-symbols-outlined {
         font-size: 80px;
-        color: var(--error-color, #dc3545);
+        color: var(--danger-color, #dc3545);
         margin-bottom: 20px;
     }
     .error-container h1 {

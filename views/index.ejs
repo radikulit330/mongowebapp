@@ -3,8 +3,31 @@
 <% const urlParams = new URLSearchParams(locals.queryString || ''); %>
 <% const message = urlParams.get('message'); %>
 <% const error = urlParams.get('error'); %>
-<% if (message) { %><div class="alert alert-success"><%= message %></div><% } %>
-<% if (error) { %><div class="alert alert-danger"><%= error %></div><% } %>
+<% if (message) { %><div class="alert alert-success"><%= decodeURIComponent(message) %></div><% } %>
+<% if (error) { %><div class="alert alert-danger"><%= decodeURIComponent(error) %></div><% } %>
+
+<%# --- ОНОВЛЕНО БЛОК ПРОГРЕСУ СХОВИЩА --- %>
+<% if (storageInfo && !locals.isAdmin) { %>
+    <div class="storage-info-card info-card">
+        <h3><span class="material-symbols-outlined">data_usage</span> Використання Сховища</h3>
+        <p>
+            Використано (Дані / Диск): <strong><%= storageInfo.dataFormatted %></strong> / <strong><%= storageInfo.usedFormatted %></strong> з <strong><%= storageInfo.limitFormatted %></strong>
+        </p>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: <%= storageInfo.percentage %>%; background-color: <%= storageInfo.isOverLimit ? 'var(--danger-color)' : 'var(--success-color)' %>;">
+                <%= storageInfo.percentage %>%
+            </div>
+        </div>
+        <% if (storageInfo.isOverLimit) { %>
+            <p class="alert alert-danger" style="margin-top: 15px; padding: 10px;">
+                <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.2em;">warning</span>
+                <strong>Ліміт сховища перевищено!</strong> Ви не можете створювати нові колекції.
+            </p>
+        <% } %>
+    </div>
+<% } %>
+<%# ----------------------------- %>
+
 
 <div class="page-header">
     <h1><span class="material-symbols-outlined">database</span>
@@ -14,7 +37,12 @@
             Мої Колекції
         <% } %>
     </h1>
-    <a href="/create-collection" class="button add-button">
+    <a href="/create-collection"
+       class="button add-button <%= (storageInfo && storageInfo.isOverLimit) ? 'disabled' : '' %>"
+       <% if (storageInfo && storageInfo.isOverLimit) { %>
+           title="Ліміт сховища досягнуто"
+           onclick="event.preventDefault(); alert('Ліміт сховища досягнуто. Ви не можете створювати нові колекції.');"
+       <% } %>>
         <span class="material-symbols-outlined">add_box</span> Створити колекцію
     </a>
 </div>
@@ -25,14 +53,12 @@
             <div class="collection-card">
                 <h2>
                     <span class="material-symbols-outlined">folder_open</span>
-                    <%= collection.displayNameForCard %> <%# Використовуємо нове поле %>
+                    <%= collection.displayNameForCard %>
                 </h2>
                 <div class="card-actions">
-                    <%# 'collection.name' тепер коректний для URL і для адміна, і для юзера %>
                     <a href="/db/<%= collection.name %>" class="button view-button">
                         <span class="material-symbols-outlined">visibility</span> Переглянути
                     </a>
-                    <%# Кнопка видалення доступна адміну для будь-якої, або користувачу для своєї %>
                     <% if (locals.isAdmin || collection.isOwned) { %>
                         <button type="button" class="button delete-button delete-coll-btn"
                                 data-collection="<%= collection.name %>"

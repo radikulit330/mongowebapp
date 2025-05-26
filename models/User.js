@@ -1,5 +1,10 @@
+// models/User.js
+
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+
+// Додаємо ліміт пам'яті (в байтах). Наприклад, 50 MB.
+const DEFAULT_STORAGE_LIMIT = 50 * 1024 * 1024;
 
 const UserSchema = new mongoose.Schema({
   username: {
@@ -26,6 +31,12 @@ const UserSchema = new mongoose.Schema({
       "Будь ласка, введіть дійсну адресу електронної пошти",
     ], // Базова валідація формату
   },
+  // --- ДОДАНО НОВЕ ПОЛЕ ---
+  storageLimit: {
+    type: Number,
+    default: DEFAULT_STORAGE_LIMIT,
+  },
+  // -------------------------
   createdAt: {
     type: Date,
     default: Date.now,

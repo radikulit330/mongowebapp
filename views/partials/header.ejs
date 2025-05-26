@@ -4,11 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <%
-        let pageTitle = 'MongoWebAdmin'; // Заголовок за замовчуванням
+        let pageTitle = 'MongoWebAdmin';
         if (locals.title) {
             pageTitle = locals.title;
         } else if (locals.collectionName) {
             pageTitle = `Колекція: ${locals.collectionName} - MongoWebAdmin`;
+        } else if (locals.currentAdminPage) { // Для заголовків адмін-сторінок
+            const adminPageTitles = {
+                dashboard: "Головна - Адмін-панель",
+                users: "Користувачі - Адмін-панель",
+                // ... інші заголовки для адмін-сторінок
+            };
+            pageTitle = adminPageTitles[locals.currentAdminPage] || "Адмін-панель";
+            pageTitle += " - MongoWebAdmin";
         }
     %>
     <title><%= pageTitle %></title>
@@ -47,9 +55,12 @@
         <nav class="main-menu">
             <ul>
                 <% if (isLoggedIn) { %>
-                    <li><a href="/"><span class="material-symbols-outlined">dataset</span> Колекції</a></li>
-                    <li><a href="/settings"><span class="material-symbols-outlined">settings</span> Налаштування</a></li>
-                    <li><a href="/tools/api-tester"><span class="material-symbols-outlined">science</span> Тестування API</a></li>
+                    <li><a href="/" class="<%= locals.currentContext === 'collections' && !locals.currentAdminPage ? 'active' : '' %>"><span class="material-symbols-outlined">dataset</span> Колекції</a></li>
+                    <li><a href="/settings" class="<%= locals.currentContext === 'settings' ? 'active' : '' %>"><span class="material-symbols-outlined">settings</span> Налаштування</a></li>
+                    <li><a href="/tools/api-tester" class="<%= locals.currentContext === 'api-tester' ? 'active' : '' %>"><span class="material-symbols-outlined">science</span> Тестування API</a></li>
+                    <% if (locals.isAdmin) { %>
+                        <li><a href="/admin" class="<%= locals.currentAdminPage ? 'active' : '' %>"><span class="material-symbols-outlined">admin_panel_settings</span> Адмін-панель</a></li>
+                    <% } %>
                 <% } %>
             </ul>
         </nav>
@@ -57,21 +68,21 @@
         <div class="header-controls">
             <% if (isLoggedIn) { %>
                 <form class="search-bar" action="/search" method="GET">
-                    <input type="hidden" name="context" value="<%= locals.currentContext || 'collections' %>">
+                    <input type="hidden" name="context" value="<%= locals.currentContext && locals.currentContext !== 'collections' && !locals.currentAdminPage ? locals.currentContext : 'collections' %>">
                     <input type="search" name="q" placeholder="Пошук..." value="<%= locals.searchTerm || '' %>" aria-label="Пошук">
                     <button type="submit" title="Пошук">
                         <span class="material-symbols-outlined">search</span>
                     </button>
                 </form>
 
-                <a href="/logout" class="button logout-button" title="Вийти (<%= username %>)">
+                 <a href="/logout" class="button logout-button" title="Вийти (<%= username %>)">
                    <span class="material-symbols-outlined">logout</span>
                 </a>
             <% } %>
 
              <button id="theme-toggle" class="button icon-only" title="Змінити тему">
                 <span class="material-symbols-outlined theme-icon">dark_mode</span>
-            </button>
+             </button>
 
             <button class="hamburger-icon button icon-only" title="Меню">
                 <span class="material-symbols-outlined">menu</span>

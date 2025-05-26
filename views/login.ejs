@@ -100,7 +100,13 @@
             margin-top: 20px;
             color: #666;
         }
+        .g-recaptcha-container { /* Стиль для контейнера reCAPTCHA */
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
     </style>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
     <div class="login-container">
@@ -123,6 +129,16 @@
                 <label for="password">Пароль:</label>
                 <input type="password" id="password" name="password" required>
             </div>
+
+            <% if (locals.recaptchaSiteKey) { %>
+                <div class="g-recaptcha-container">
+                    <div class="g-recaptcha" data-sitekey="<%= recaptchaSiteKey %>"></div>
+                </div>
+            <% } else { %>
+                <p class="error-message">Ключ reCAPTCHA не налаштовано. Зверніться до адміністратора.</p>
+            <% } %>
+            
+
             <button type="submit" class="button">
                  <span class="material-symbols-outlined">login</span> Увійти
             </button>
