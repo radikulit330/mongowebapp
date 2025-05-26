@@ -1,0 +1,58 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+    <h1><span class="material-symbols-outlined">manage_accounts</span> Керування Користувачами</h1>
+    <a href="/admin/users/create" class="button add-button">
+        <span class="material-symbols-outlined">person_add</span> Створити користувача
+    </a>
+</div>
+
+<% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+<% if (error) { %><div class="alert alert-danger"><%= error %></div><% } %>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Ім'я користувача</th>
+                <th>Email</th>
+                <th>Ліміт сховища</th>
+                <th>Дата створення</th>
+                <th>Дії</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (users && users.length > 0) { %>
+                <% users.forEach(user => { %>
+                    <tr>
+                        <td data-label="Ім'я"><%= user.username %> <% if (user.username === 'admin') { %><span class="badge unique">Admin</span><% } %></td>
+                        <td data-label="Email"><%= user.email || 'N/A' %></td>
+                        <td data-label="Ліміт сховища"><%= user.storageLimitFormatted %></td>
+                        <td data-label="Дата створення"><%= new Date(user.createdAt).toLocaleDateString('uk-UA') %></td>
+                        <td data-label="Дії" class="actions-cell">
+                            <a href="/admin/users/<%= user._id %>/edit" class="button edit-button icon-only" title="Редагувати користувача">
+                                <span class="material-symbols-outlined">edit</span>
+                            </a>
+                            <% if (user.username !== 'admin') { %>
+                                <form action="/admin/users/<%= user._id %>/delete" method="POST" style="display: inline;" onsubmit="return confirm('Ви впевнені, що хочете видалити користувача <%= user.username %>? Це не видалить його колекції.');">
+                                    <button type="submit" class="button delete-button icon-only" title="Видалити користувача">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </button>
+                                </form>
+                            <% } %>
+                             <a href="/admin/users/<%= user._id %>/collections" class="button view-button icon-only" title="Переглянути колекції користувача">
+                                <span class="material-symbols-outlined">folder_shared</span>
+                            </a>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="5" class="no-documents-cell">Користувачів не знайдено.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<%- include('../partials/footer') %>

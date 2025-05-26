@@ -1,0 +1,40 @@
+<%- include('../partials/header') %> <%# Шлях до partials змінився %>
+
+<div class="page-header">
+    <h1><span class="material-symbols-outlined">admin_panel_settings</span> Адмін-панель</h1>
+</div>
+
+<div class="admin-dashboard-grid">
+    <div class="info-card">
+        <h3><span class="material-symbols-outlined">group</span> Користувачі</h3>
+        <p>Керування користувачами, їхніми правами та лімітами.</p>
+        <a href="/admin/users" class="button view-button">Перейти до користувачів</a>
+    </div>
+    <div class="info-card">
+        <h3><span class="material-symbols-outlined">monitoring</span> Загальна статистика</h3>
+        <p>Огляд використання ресурсів, кількість колекцій тощо.</p>
+        <a href="/admin/stats" class="button view-button">Переглянути статистику</a> <%# Маршрут ще не створено %>
+    </div>
+    <div class="info-card">
+        <h3><span class="material-symbols-outlined">settings_applications</span> Налаштування додатку</h3>
+        <p>Глобальні налаштування MongoWebAdmin.</p>
+        <a href="/admin/app-settings" class="button view-button">Налаштування</a> <%# Маршрут ще не створено %>
+    </div>
+     <div class="info-card">
+        <h3><span class="material-symbols-outlined">storage</span> Всі Колекції</h3>
+        <p>Перегляд всіх колекцій в базі даних, незалежно від власника.</p>
+        <a href="/admin/collections" class="button view-button">Переглянути всі колекції</a> <%# Маршрут ще не створено %>
+    </div>
+</div>
+
+<style>
+    .admin-dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    /* Стилі для info-card вже мають бути у вашому style.css */
+</style>
+
+<%- include('../partials/footer') %>

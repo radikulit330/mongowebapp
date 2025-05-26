@@ -1,19 +1,17 @@
-<%- include('partials/header') %>
+<%- include('partials/header') %> <%# Шлях виправлено/перевірено %>
 
 <%# --- Функція для відображення значення комірки --- %>
 <%
 const displayTableCell = (value, valueTypeDetectedByHelper) => {
     if (value === null || typeof value === 'undefined') return '<em class="null-value">NULL</em>';
-
-    const type = valueTypeDetectedByHelper; // Використовуємо тип, переданий з хелпера
+    const type = valueTypeDetectedByHelper;
 
     if (type === 'Date') {
-        // Перевіряємо, чи це дійсно об'єкт Date
         const dateValue = (value instanceof Date) ? value : new Date(value);
         if (!isNaN(dateValue.getTime())) {
             return dateValue.toLocaleString('uk-UA', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
-        return String(value); // Якщо не валідна дата, показуємо як рядок
+        return String(value);
     }
     if (type === 'Boolean') return value ? '<span class="badge boolean-true">Так</span>' : '<span class="badge boolean-false">Ні</span>';
     if (type === 'Array') {
@@ -21,7 +19,7 @@ const displayTableCell = (value, valueTypeDetectedByHelper) => {
         const preview = stringified.length > 40 ? stringified.substring(0, 37) + '...' : stringified;
         return `<span class="data-type-badge array">[Масив (${value.length})]</span> <code title="${stringified.replace(/"/g, '&quot;')}">${preview}</code>`;
     }
-    if (type === 'Object' && !(value instanceof ObjectId) && !(value instanceof Date) ) { // Додаткова перевірка, щоб ObjectId/Date не потрапили сюди
+    if (type === 'Object' && !(value instanceof ObjectId) && !(value instanceof Date) ) {
         const stringified = JSON.stringify(value);
         const preview = stringified.length > 40 ? stringified.substring(0, 37) + '...' : stringified;
         return `<span class="data-type-badge object">[Об'єкт]</span> <code title="${stringified.replace(/"/g, '&quot;')}">${preview}</code>`;
@@ -29,14 +27,23 @@ const displayTableCell = (value, valueTypeDetectedByHelper) => {
     if (type === 'ObjectId') return `<code class="object-id-value">${value.toString()}</code>`;
 
     let stringValue = String(value);
-    if (stringValue.length > 50) { // Обрізаємо довгі рядки
+    if (stringValue.length > 50) {
         return `<span title="${stringValue.replace(/"/g, '&quot;')}">${stringValue.substring(0, 50)}...</span>`;
     }
     return stringValue;
 };
 %>
 
-<h1><span class="material-symbols-outlined">table_rows</span> Колекція: <strong><%= collectionName %></strong></h1>
+<h1>
+    <span class="material-symbols-outlined">table_rows</span>
+    Колекція: <strong><%= collectionName %></strong>
+    <% if (locals.isAdmin && targetUserIdForAdminView && ownerUsername && ownerUsername !== locals.username) { %>
+        (користувача: <strong><%= ownerUsername %></strong>)
+    <% } else if (!locals.isAdmin && ownerUsername) { %>
+         <%# Можна показувати "Моя колекція" або ім'я користувача для ясності, якщо потрібно %>
+    <% } %>
+</h1>
+
 
 <% const urlParams = new URLSearchParams(locals.queryString || ''); %>
 <% const message = urlParams.get('message'); %>
@@ -82,6 +89,7 @@ const displayTableCell = (value, valueTypeDetectedByHelper) => {
                             <button type="button" class="button delete-button icon-only delete-index-btn"
                                     data-collection="<%= collectionName %>"
                                     data-index="<%= index.name %>"
+                                    <%= targetUserIdForAdminView ? 'data-target-user="' + targetUserIdForAdminView + '"' : '' %>
                                     title="Видалити індекс">
                                 <span class="material-symbols-outlined">delete</span>
                             </button>
@@ -96,7 +104,7 @@ const displayTableCell = (value, valueTypeDetectedByHelper) => {
         <% } %>
         <hr>
         <h4><span class="material-symbols-outlined">add_task</span> Створити Новий Індекс</h4>
-        <form id="create-index-form" action="/db/<%= collectionName %>/index" method="POST" class="create-index-form">
+        <form id="create-index-form" action="/db/<%= collectionName %>/index<%= locals.queryString || '' %>" method="POST" class="create-index-form">
             <div id="index-fields-container">
                 <div class="field-row index-field-row">
                     <input type="text" name="fields[0][key]" placeholder="Назва поля" required>
@@ -128,7 +136,10 @@ const displayTableCell = (value, valueTypeDetectedByHelper) => {
 
 <div class="advanced-filter-box">
     <h3><span class="material-symbols-outlined">filter_alt</span> Розширений Фільтр</h3>
-    <form action="/db/<%= collectionName %>" method="GET" class="filter-form">
+    <form action="/db/<%= collectionName %><%= targetUserIdForAdminView ? '?targetUser=' + targetUserIdForAdminView : '' %>" method="GET" class="filter-form">
+        <% if (targetUserIdForAdminView) { %>
+             <input type="hidden" name="targetUser" value="<%= targetUserIdForAdminView %>">
+        <% } %>
         <input type="hidden" name="limit" value="<%= limit %>">
         <div class="form-group">
             <label for="field">Поле:</label>
@@ -151,7 +162,7 @@ const displayTableCell = (value, valueTypeDetectedByHelper) => {
             <button type="submit" class="button filter-button">
                 <span class="material-symbols-outlined">search</span> Застосувати
             </button>
-            <a href="/db/<%= collectionName %>" class="button cancel-button">
+            <a href="/db/<%= collectionName %><%= targetUserIdForAdminView ? '?targetUser=' + targetUserIdForAdminView : '' %>" class="button cancel-button">
                 <span class="material-symbols-outlined">clear_all</span> Скинути
             </a>
         </div>
@@ -159,7 +170,7 @@ const displayTableCell = (value, valueTypeDetectedByHelper) => {
 </div>
 
 <div class="collection-actions">
-    <a href="/db/<%= collectionName %>/add" class="button add-button">
+    <a href="/db/<%= collectionName %>/add<%= targetUserIdForAdminView ? '?targetUser=' + targetUserIdForAdminView : '' %>" class="button add-button">
         <span class="material-symbols-outlined">add_box</span> Додати документ
     </a>
     <div class="export-buttons">
@@ -206,25 +217,28 @@ const displayTableCell = (value, valueTypeDetectedByHelper) => {
                             <td data-label="ID"><code><%= doc._id %></code></td>
                             <td data-label="Data">Повні дані документа не відображено через відсутність заголовків.</td>
                         <% } %>
-                        <td data-label="Actions" class="actions-cell">
-                             <a href="/db/<%= collectionName %>/<%= doc._id %>/edit" class="button edit-button icon-only" title="Редагувати">
+                        <td data-label="Дії" class="actions-cell">
+                             <a href="/db/<%= collectionName %>/<%= doc._id %>/edit<%= targetUserIdForAdminView ? '?targetUser=' + targetUserIdForAdminView : '' %>" class="button edit-button icon-only" title="Редагувати">
                                 <span class="material-symbols-outlined">edit</span>
                             </a>
                             <button type="button" class="button delete-button icon-only delete-doc-btn"
                                     data-id="<%= doc._id %>"
                                     data-collection="<%= collectionName %>"
+                                    <%= targetUserIdForAdminView ? 'data-target-user="' + targetUserIdForAdminView + '"' : '' %>
                                     title="Видалити">
                                 <span class="material-symbols-outlined">delete</span>
                             </button>
                         </td>
-                    </tr>
+                   </tr>
                 <% }) %>
             <% } else { %>
                 <tr>
                     <td colspan="<%= (tableHeaders ? tableHeaders.length : 1) + 1 %>" class="no-documents-cell">
                         Документи не знайдено.
-                        <% if (!locals.currentValue && !locals.searchTerm) { %>
+                        <% if (!locals.currentValue && !locals.searchTerm && !targetUserIdForAdminView) { %>
                             <a href="/db/<%= collectionName %>/add">Додати перший документ?</a>
+                        <% } else if (!locals.currentValue && !locals.searchTerm && targetUserIdForAdminView) { %>
+                             <a href="/db/<%= collectionName %>/add?targetUser=<%= targetUserIdForAdminView %>">Додати перший документ?</a>
                         <% } %>
                     </td>
                 </tr>
@@ -238,17 +252,19 @@ const displayTableCell = (value, valueTypeDetectedByHelper) => {
         <ul>
             <%
                 const params = new URLSearchParams(locals.queryString || '');
-                params.delete('page');
-                const baseQuery = params.toString() ? `&${params.toString()}` : '';
+                params.delete('page'); 
+                const baseQueryString = params.toString();
+                const queryPrefix = baseQueryString ? '&' : (locals.queryString && locals.queryString.includes('?') && !baseQueryString ? '' : '?');
             %>
-            <% if (currentPage > 1) { %><li><a href="?page=<%= currentPage - 1 %><%= baseQuery %>">« Попередня</a></li><% } %>
-            <% const maxPagesToShow = 5; let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2)); let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1); if (endPage - startPage + 1 < maxPagesToShow) { startPage = Math.max(1, endPage - maxPagesToShow + 1); } %>
-            <% if (startPage > 1) { %><li><a href="?page=1<%= baseQuery %>">1</a></li><% if (startPage > 2) { %> <li><span>...</span></li> <% } %><% } %>
-            <% for(let i = startPage; i <= endPage; i++) { %><li class="<%= i === currentPage ? 'active' : '' %>"><a href="?page=<%= i %><%= baseQuery %>"><%= i %></a></li><% } %>
-            <% if (endPage < totalPages) { %><% if (endPage < totalPages - 1) { %> <li><span>...</span></li> <% } %><li><a href="?page=<%= totalPages %><%= baseQuery %>"><%= totalPages %></a></li><% } %>
-            <% if (currentPage < totalPages) { %><li><a href="?page=<%= currentPage + 1 %><%= baseQuery %>">Наступна »</a></li><% } %>
+            <% if (currentPage > 1) { %><li><a href="?page=<%= currentPage - 1 %><%= queryPrefix %><%= baseQueryString %>">« Попередня</a></li><% } %>
+            <% const maxPagesToShow = 5; let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2)); let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+            if (endPage - startPage + 1 < maxPagesToShow) { startPage = Math.max(1, endPage - maxPagesToShow + 1); } %>
+            <% if (startPage > 1) { %><li><a href="?page=1<%= queryPrefix %><%= baseQueryString %>">1</a></li><% if (startPage > 2) { %> <li><span>...</span></li> <% } %><% } %>
+            <% for(let i = startPage; i <= endPage; i++) { %><li class="<%= i === currentPage ? 'active' : '' %>"><a href="?page=<%= i %><%= queryPrefix %><%= baseQueryString %>"><%= i %></a></li><% } %>
+            <% if (endPage < totalPages) { %><% if (endPage < totalPages - 1) { %> <li><span>...</span></li> <% } %><li><a href="?page=<%= totalPages %><%= queryPrefix %><%= baseQueryString %>"><%= totalPages %></a></li><% } %>
+            <% if (currentPage < totalPages) { %><li><a href="?page=<%= currentPage + 1 %><%= queryPrefix %><%= baseQueryString %>">Наступна »</a></li><% } %>
         </ul>
     </nav>
 <% } %>
 
-<%- include('partials/footer') %>
+<%- include('partials/footer') %> <%# Шлях виправлено/перевірено %>

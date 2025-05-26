@@ -1,3 +1,5 @@
+/* public/css/style.css */
+
 /* === Змінні CSS (для тем та консистентності) === */
 :root {
   --primary-color: #007bff;
@@ -211,6 +213,13 @@ table code {
   font-weight: 700;
   color: var(--text-color);
 }
+.logo a {
+  /* Робимо все посилання клікабельним */
+  display: flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
 .logo .logo-icon {
   margin-right: 10px;
   color: var(--primary-color);
@@ -241,6 +250,7 @@ table code {
 .main-menu li a.active {
   background-color: rgba(var(--primary-color_rgb), 0.1);
   color: var(--primary-color);
+  text-decoration: none; /* Прибираємо підкреслення при hover */
 }
 .dark-theme .main-menu li a:hover,
 .dark-theme .main-menu li a.active {
@@ -264,9 +274,9 @@ table code {
 }
 .search-bar input[type="search"] {
   border: none;
-  padding: 9px 12px; /* Змінено падінг */
+  padding: 9px 12px;
   outline: none;
-  background-color: transparent; /* Прозорий, щоб успадкувати від .search-bar */
+  background-color: transparent;
   color: var(--text-color);
   min-width: 200px;
 }
@@ -274,7 +284,7 @@ table code {
   background-color: var(--primary-color);
   border: none;
   color: white;
-  padding: 9px 12px; /* Синхронізовано падінг */
+  padding: 9px 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -289,6 +299,11 @@ table code {
 
 .hamburger-icon {
   display: none; /* Показуємо тільки на мобільних */
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  padding: 10px;
 }
 
 /* === Кнопки === */
@@ -310,11 +325,13 @@ table code {
 .button .material-symbols-outlined {
   font-size: 1.25em; /* Трохи збільшено іконки */
   line-height: 1; /* Прибирає зайвий вертикальний простір */
+  vertical-align: middle; /* Краще вирівнювання */
 }
 .button:hover {
   opacity: 0.9;
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  text-decoration: none !important;
 }
 .button:active {
   transform: translateY(0px);
@@ -380,6 +397,7 @@ table code {
 }
 .button.icon-only .material-symbols-outlined {
   font-size: 1.4em;
+  margin: 0; /* Прибираємо можливі відступи */
 }
 .button.icon-only span:not(.material-symbols-outlined) {
   display: none;
@@ -395,6 +413,20 @@ table code {
 .dark-theme #theme-toggle.button.icon-only:hover {
   background-color: var(--header-background);
 }
+
+/* === Стиль для вимкнених кнопок (НОВЕ) === */
+.button.disabled {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  opacity: 0.6;
+  cursor: not-allowed !important; /* Важливо */
+}
+.button.disabled:hover {
+  transform: none;
+  box-shadow: none;
+  opacity: 0.6;
+}
+/* ------------------------------------------- */
 
 /* === Картки === */
 .collection-list {
@@ -423,6 +455,7 @@ table code {
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 15px;
   font-size: 1.4em;
+  word-break: break-all; /* Для довгих назв */
 }
 .collection-card .card-actions {
   display: flex;
@@ -462,6 +495,7 @@ table code {
   gap: 8px;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 10px;
+  margin-top: 0; /* Забираємо верхній відступ */
 }
 .info-card h4 {
   font-size: 1.1em;
@@ -519,8 +553,8 @@ table code {
 }
 .badge.sparse {
   background-color: var(--warning-color);
-  color: var(--text-color);
-} /* Змінено колір тексту для жовтого */
+  color: var(--text-color); /* Змінено колір тексту для жовтого */
+}
 .badge.ttl {
   background-color: var(--info-color);
 }
@@ -544,6 +578,46 @@ table code {
 .index-field-row {
   align-items: center;
 }
+
+/* === Інформація про сховище (НОВИЙ БЛОК) === */
+.storage-info-card {
+  margin-bottom: 25px;
+  padding: 20px;
+  /* Використовує стилі .info-card, якщо вони вже визначені */
+}
+.storage-info-card h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+.progress-bar-container {
+  width: 100%;
+  background-color: var(--background-color);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  height: 25px;
+}
+.progress-bar {
+  height: 100%;
+  background-color: var(--success-color);
+  text-align: center;
+  line-height: 25px;
+  color: white;
+  font-weight: bold;
+  font-size: 0.9em;
+  white-space: nowrap;
+  transition: width 0.5s ease-in-out;
+  min-width: 30px; /* Щоб було видно текст навіть при < 5% */
+  display: flex; /* Для центрування тексту */
+  justify-content: center;
+  align-items: center;
+}
+.dark-theme .progress-bar-container {
+  background-color: var(--header-background);
+}
+/* ------------------------------------------- */
 
 /* === Форми === */
 .form-container,
@@ -687,7 +761,7 @@ td.actions-cell {
   display: flex;
   gap: 8px;
   align-items: center;
-} /* Оновлено */
+}
 .no-documents-cell {
   text-align: center;
   padding: 20px !important;
@@ -821,6 +895,7 @@ em.null-value {
   color: var(--primary-color);
   border-right: 1px solid var(--border-color);
   transition: background-color var(--transition-speed) ease;
+  text-decoration: none;
 }
 .pagination li:last-child a,
 .pagination li:last-child span {
@@ -828,6 +903,7 @@ em.null-value {
 }
 .pagination li a:hover {
   background-color: var(--background-color);
+  text-decoration: none;
 }
 .dark-theme .pagination li a:hover {
   background-color: var(--header-background);
@@ -852,6 +928,9 @@ em.null-value {
   border: 1px solid transparent;
   border-radius: var(--border-radius);
   font-size: 0.95em;
+  display: flex; /* Для вирівнювання іконки */
+  align-items: center;
+  gap: 10px;
 }
 .alert-success {
   color: #0f5132;
@@ -996,6 +1075,14 @@ em.null-value {
   }
   .hamburger-icon {
     display: inline-flex;
+    padding: 8px; /* Невеликий відступ для іконки */
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    color: var(--text-color);
+  }
+  .hamburger-icon .material-symbols-outlined {
+    font-size: 24px;
   }
   .main-menu.open {
     display: block;
@@ -1007,6 +1094,7 @@ em.null-value {
     box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.1);
     border-left: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
+    z-index: 999;
   }
   .main-menu.open ul {
     flex-direction: column;
@@ -1014,6 +1102,7 @@ em.null-value {
   .main-menu.open li a {
     padding: 15px 20px;
     border-bottom: 1px solid var(--border-color);
+    border-radius: 0;
   }
   .main-menu.open li:last-child a {
     border-bottom: none;
@@ -1046,6 +1135,10 @@ em.null-value {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: 10px;
+    background-color: var(--card-background); /* Додаємо фон */
+  }
+  .table-wrapper table tr:hover {
+    background-color: var(--card-background); /* Прибираємо hover */
   }
   .table-wrapper table td {
     display: block;
@@ -1053,7 +1146,9 @@ em.null-value {
     padding-left: 50%;
     position: relative;
     border-bottom: 1px dashed var(--border-color);
-    min-height: 30px;
+    min-height: 35px; /* Трохи більше висоти */
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
   .table-wrapper table td:last-child {
     border-bottom: none;
@@ -1074,14 +1169,19 @@ em.null-value {
     padding-left: 10px;
     display: flex;
     justify-content: flex-end;
-  } /* Оновлено */
+    border-bottom: none; /* Зазвичай остання */
+  }
   .table-wrapper table td.actions-cell::before {
     display: none;
   }
   .table-wrapper table td span[title],
   .table-wrapper table td code[title] {
-    max-width: 100%;
-  } /* Розширюємо на моб. */
+    max-width: 100%; /* Розширюємо на моб. */
+    white-space: normal; /* Дозволяємо переноси */
+    word-break: break-all;
+    text-overflow: clip; /* Прибираємо '...' */
+    overflow: visible;
+  }
 
   .filter-form {
     flex-direction: column;
@@ -1115,6 +1215,10 @@ em.null-value {
   .structured-form .field-row .value-input-container {
     margin-bottom: 10px;
   }
+  .structured-form .field-row .remove-field-btn,
+  .structured-form .field-row .remove-index-field-btn {
+    align-self: flex-end; /* Кнопка видалення справа */
+  }
 }
 
 @media (max-width: 600px) {
@@ -1131,6 +1235,9 @@ em.null-value {
   .header-controls .search-bar {
     display: none;
   }
+  .main-menu.open {
+    top: 60px;
+  }
   .site-content {
     padding: 15px;
   }
@@ -1140,5 +1247,8 @@ em.null-value {
   }
   h1 {
     font-size: 1.8rem;
+  }
+  .collection-list {
+    grid-template-columns: 1fr; /* Одна колонка на найменших екранах */
   }
 }

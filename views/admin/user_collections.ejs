@@ -1,0 +1,81 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+    <h1>
+        <span class="material-symbols-outlined">folder_managed</span>
+        Колекції користувача: <strong><%= targetUser.username %></strong>
+    </h1>
+    <a href="/admin/users" class="button cancel-button">
+        <span class="material-symbols-outlined">arrow_back</span> До списку користувачів
+    </a>
+</div>
+
+<% if (locals.success) { %><div class="alert alert-success"><%= success %></div><% } %>
+<% if (locals.error) { %><div class="alert alert-danger"><%= error %></div><% } %>
+
+<%# --- БЛОК ПРОГРЕСУ СХОВИЩА КОРИСТУВАЧА --- %>
+<% if (storageInfo) { %>
+    <div class="storage-info-card info-card">
+        <h3><span class="material-symbols-outlined">data_usage</span> Використання Сховища (<%= targetUser.username %>)</h3>
+        <p>
+            Використано (Дані / Диск): <strong><%= storageInfo.dataFormatted %></strong> / <strong><%= storageInfo.usedFormatted %></strong> з <strong><%= storageInfo.limitFormatted %></strong>
+        </p>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: <%= storageInfo.percentage %>%; background-color: <%= storageInfo.isOverLimit ? 'var(--danger-color)' : 'var(--success-color)' %>;">
+                <%= storageInfo.percentage %>%
+            </div>
+        </div>
+        <% if (storageInfo.isOverLimit) { %>
+            <p class="alert alert-danger" style="margin-top: 15px; padding: 10px;">
+                <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.2em;">warning</span>
+                <strong>Ліміт сховища користувача перевищено!</strong>
+            </p>
+        <% } %>
+    </div>
+<% } %>
+<%# ----------------------------- %>
+
+
+<% if (collections && collections.length > 0) { %>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Назва колекції</th>
+                    <th>Документів</th>
+                    <th>Розмір даних</th>
+                    <th>Розмір на диску</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% collections.forEach(collection => { %>
+                    <tr>
+                        <td data-label="Назва"><%= collection.displayName %></td>
+                        <td data-label="Документів"><%= collection.count %></td>
+                        <td data-label="Розмір даних"><%= collection.sizeFormatted %></td>
+                        <td data-label="Розмір на диску"><%= collection.storageSizeFormatted %></td>
+                        <td data-label="Дії" class="actions-cell">
+                            <a href="/db/<%= collection.displayName %>?targetUser=<%= targetUser._id %>" class="button view-button icon-only" title="Переглянути вміст колекції">
+                                <span class="material-symbols-outlined">table_rows</span>
+                            </a>
+                            <%# Можна додати кнопку видалення колекції, якщо потрібно %>
+                            <form action="/admin/users/<%= targetUser._id %>/collections/<%= collection.displayName %>/delete" method="POST" style="display: inline;" onsubmit="return confirm('Ви впевнені, що хочете видалити колекцію <%= collection.displayName %> користувача <%= targetUser.username %>?');"> <%# Маршрут ще не створено %>
+                                <button type="submit" class="button delete-button icon-only" title="Видалити колекцію">
+                                    <span class="material-symbols-outlined">delete_forever</span>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+<% } else { %>
+    <div class="info-card">
+        <p>У користувача <strong><%= targetUser.username %></strong> немає власних (префіксованих) колекцій.</p>
+    </div>
+<% } %>
+
+
+<%- include('../partials/footer') %>
