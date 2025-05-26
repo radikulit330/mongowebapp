@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+
+<% const urlParams = new URLSearchParams(locals.queryString || ''); %>
+<% const message = urlParams.get('message'); %>
+<% const error = urlParams.get('error'); %>
+<% if (message) { %><div class="alert alert-success"><%= message %></div><% } %>
+<% if (error) { %><div class="alert alert-danger"><%= error %></div><% } %>
+
+<div class="page-header">
+    <h1><span class="material-symbols-outlined">database</span>
+        <% if (locals.isAdmin) { %>
+            Всі Колекції Бази Даних
+        <% } else { %>
+            Мої Колекції
+        <% } %>
+    </h1>
+    <a href="/create-collection" class="button add-button">
+        <span class="material-symbols-outlined">add_box</span> Створити колекцію
+    </a>
+</div>
+
+<div class="collection-list">
+    <% if (collections && collections.length > 0) { %>
+        <% collections.forEach(collection => { %>
+            <div class="collection-card">
+                <h2>
+                    <span class="material-symbols-outlined">folder_open</span>
+                    <%= collection.displayNameForCard %> <%# Використовуємо нове поле %>
+                </h2>
+                <div class="card-actions">
+                    <%# 'collection.name' тепер коректний для URL і для адміна, і для юзера %>
+                    <a href="/db/<%= collection.name %>" class="button view-button">
+                        <span class="material-symbols-outlined">visibility</span> Переглянути
+                    </a>
+                    <%# Кнопка видалення доступна адміну для будь-якої, або користувачу для своєї %>
+                    <% if (locals.isAdmin || collection.isOwned) { %>
+                        <button type="button" class="button delete-button delete-coll-btn"
+                                data-collection="<%= collection.name %>"
+                                title="Видалити колекцію">
+                            <span class="material-symbols-outlined">delete_forever</span> Видалити
+                        </button>
+                    <% } %>
+                </div>
+            </div>
+        <% }) %>
+    <% } else { %>
+        <div class="info-card">
+             <p>Колекцій не знайдено.</p>
+             <% if (!locals.isAdmin) { %>
+                <p>Ви можете <a href="/create-collection">створити свою першу колекцію</a>.</p>
+             <% } %>
+        </div>
+    <% } %>
+</div>
+
+<%- include('partials/footer') %>

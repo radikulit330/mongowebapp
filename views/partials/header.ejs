@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%
+        let pageTitle = 'MongoWebAdmin'; // Заголовок за замовчуванням
+        if (locals.title) {
+            pageTitle = locals.title;
+        } else if (locals.collectionName) {
+            pageTitle = `Колекція: ${locals.collectionName} - MongoWebAdmin`;
+        }
+    %>
+    <title><%= pageTitle %></title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/animations.css">
+
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.className = theme + '-theme';
+        })();
+    </script>
+    <style id="dynamic-font-style"></style>
+
+</head>
+<body>
+
+    <div id="preloader">
+        <div class="spinner"></div>
+    </div>
+    <header class="site-header">
+        <div class="logo">
+            <a href="/" title="На головну">
+                <span class="material-symbols-outlined logo-icon">storage</span>
+                <span>MongoWebAdmin</span>
+            </a>
+        </div>
+
+        <nav class="main-menu">
+            <ul>
+                <% if (isLoggedIn) { %>
+                    <li><a href="/"><span class="material-symbols-outlined">dataset</span> Колекції</a></li>
+                    <li><a href="/settings"><span class="material-symbols-outlined">settings</span> Налаштування</a></li>
+                    <li><a href="/tools/api-tester"><span class="material-symbols-outlined">science</span> Тестування API</a></li>
+                <% } %>
+            </ul>
+        </nav>
+
+        <div class="header-controls">
+            <% if (isLoggedIn) { %>
+                <form class="search-bar" action="/search" method="GET">
+                    <input type="hidden" name="context" value="<%= locals.currentContext || 'collections' %>">
+                    <input type="search" name="q" placeholder="Пошук..." value="<%= locals.searchTerm || '' %>" aria-label="Пошук">
+                    <button type="submit" title="Пошук">
+                        <span class="material-symbols-outlined">search</span>
+                    </button>
+                </form>
+
+                <a href="/logout" class="button logout-button" title="Вийти (<%= username %>)">
+                   <span class="material-symbols-outlined">logout</span>
+                </a>
+            <% } %>
+
+             <button id="theme-toggle" class="button icon-only" title="Змінити тему">
+                <span class="material-symbols-outlined theme-icon">dark_mode</span>
+            </button>
+
+            <button class="hamburger-icon button icon-only" title="Меню">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="site-content">

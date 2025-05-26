@@ -1,0 +1,91 @@
+<%- include('partials/header') %>
+
+<h1><span class="material-symbols-outlined">tune</span> Налаштування</h1>
+<p>Вітаємо, <strong><%= username %></strong>! Тут ви можете налаштувати додаток.</p>
+
+<div class="settings-grid">
+
+    <div class="info-card settings-card">
+        <h3><span class="material-symbols-outlined">palette</span> Зовнішній вигляд</h3>
+        <div class="form-group">
+            <label for="font-select">Виберіть шрифт:</label>
+            <select id="font-select">
+                <option value="'Inter', sans-serif">Inter (за замовчуванням)</option>
+                <option value="'Roboto', sans-serif">Roboto</option>
+                <option value="'Lato', sans-serif">Lato</option>
+                <option value="'Fira Code', monospace">Fira Code (Monospace)</option>
+                <option value="'Georgia', serif">Georgia (Serif)</option>
+            </select>
+            <p class="note">Шрифт зберігається локально у вашому браузері.</p>
+        </div>
+        <%# Сюди можна додати перемикач теми, якщо кнопка в хедері недостатня %>
+    </div>
+
+    <div class="info-card settings-card">
+        <h3><span class="material-symbols-outlined">manage_accounts</span> Акаунт</h3>
+        <p>Ви увійшли як: <strong><%= username %></strong></p>
+        <a href="/logout" class="button logout-button">
+            <span class="material-symbols-outlined">logout</span> Вийти / Змінити користувача
+        </a>
+
+        <hr>
+
+        <h4>Змінити пароль</h4>
+        <form action="/settings/change-password" method="POST" class="settings-form"> <%# TODO: Створити цей маршрут і логіку %>
+             <%# TODO: Додати відображення повідомлень про успіх/помилку зміни пароля %>
+            <div class="form-group">
+                <label for="current-password">Поточний пароль:</label>
+                <input type="password" id="current-password" name="currentPassword" required>
+            </div>
+             <div class="form-group">
+                <label for="new-password">Новий пароль:</label>
+                <input type="password" id="new-password" name="newPassword" required>
+            </div>
+             <div class="form-group">
+                <label for="confirm-password">Підтвердіть новий пароль:</label>
+                <input type="password" id="confirm-password" name="confirmPassword" required>
+            </div>
+            <button type="submit" class="button save-button">
+                <span class="material-symbols-outlined">password</span> Змінити пароль
+            </button>
+        </form>
+    </div>
+
+</div>
+
+<%# JavaScript для зміни шрифту - додаємо прямо сюди для простоти %>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fontSelect = document.getElementById('font-select');
+        const body = document.body;
+        const fontStyleElement = document.getElementById('dynamic-font-style');
+
+        const applyFont = (fontFamily) => {
+            // Застосовуємо шрифт до body та додаємо стиль, щоб він мав вищий пріоритет
+            // Використовуємо !important обережно, але тут це може бути виправдано
+            // або додаємо більш специфічний селектор.
+            // Краще змінювати CSS змінну, якщо вона використовується,
+            // або просто додавати стиль до body.
+            body.style.fontFamily = fontFamily;
+            // Також можна оновити <style> тег для більш глобального ефекту
+            // fontStyleElement.innerHTML = `body, input, select, textarea, button { font-family: ${fontFamily} !important; }`;
+            localStorage.setItem('selectedFont', fontFamily);
+            fontSelect.value = fontFamily;
+        };
+
+        const savedFont = localStorage.getItem('selectedFont');
+        if (savedFont) {
+            applyFont(savedFont);
+        } else {
+             // Встановлюємо значення select за замовчуванням
+             fontSelect.value = body.style.fontFamily || "'Inter', sans-serif";
+        }
+
+
+        fontSelect.addEventListener('change', (e) => {
+            applyFont(e.target.value);
+        });
+    });
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,74 @@
+<%- include('partials/header') %>
+
+<h1><span class="material-symbols-outlined">edit_note</span> Редагувати документ <code><%= documentId %></code> у <strong><%= collectionName %></strong></h1>
+
+<form action="/db/<%= collectionName %>/<%= documentId %>/edit" method="POST" id="document-form" class="document-form structured-form">
+    <div id="fields-container">
+        <% fields.forEach((field, index) => { %>
+            <div class="field-row">
+                <input type="text" name="keys[]" placeholder="Ключ" value="<%= field.key %>" required>
+                <select name="types[]" class="type-select">
+                    <% ['String', 'Number', 'Boolean', 'Date', 'ObjectId', 'Array', 'Object'].forEach(type => { %>
+                        <option value="<%= type %>" <%= (field.type === type) ? 'selected' : '' %>>
+                            <%= type %>
+                        </option>
+                    <% }) %>
+                </select>
+                <div class="value-input-container">
+                    <% if (field.type === 'Array' || field.type === 'Object') { %>
+                        <textarea name="values[]" placeholder="Значення (JSON)" rows="3" required><%= field.value %></textarea>
+                    <% } else if (field.type === 'Boolean') { %>
+                        <select name="values[]">
+                            <option value="true" <%= (field.value === 'true') ? 'selected' : '' %>>true</option>
+                            <option value="false" <%= (field.value === 'false') ? 'selected' : '' %>>false</option>
+                        </select>
+                    <% } else if (field.type === 'Date') { %>
+                        <input type="date" name="values[]" value="<%= field.value %>" required>
+                    <% } else { %>
+                        <input type="text" name="values[]" placeholder="Значення" value="<%= field.value %>" required>
+                    <% } %>
+                </div>
+                <button type="button" class="button delete-button icon-only remove-field-btn" title="Видалити поле">
+                    <span class="material-symbols-outlined">remove</span>
+                </button>
+            </div>
+        <% }) %>
+
+        <%# Якщо документ порожній, покажемо один порожній рядок %>
+        <% if (fields.length === 0) { %>
+            <div class="field-row">
+                 <input type="text" name="keys[]" placeholder="Ключ" required>
+                 <select name="types[]" class="type-select">
+                     <option value="String" selected>String</option>
+                     <option value="Number">Number</option>
+                     <option value="Boolean">Boolean</option>
+                     <option value="Date">Date</option>
+                     <option value="ObjectId">ObjectId</option>
+                     <option value="Array">Array (JSON)</option>
+                     <option value="Object">Object (JSON)</option>
+                 </select>
+                 <div class="value-input-container">
+                    <input type="text" name="values[]" placeholder="Значення" required>
+                 </div>
+                 <button type="button" class="button delete-button icon-only remove-field-btn" title="Видалити поле">
+                     <span class="material-symbols-outlined">remove</span>
+                 </button>
+             </div>
+        <% } %>
+    </div>
+
+    <button type="button" id="add-field-btn" class="button add-button">
+        <span class="material-symbols-outlined">add</span> Додати поле
+    </button>
+    <hr>
+    <div class="form-actions-bottom">
+        <button type="submit" class="button save-button">
+            <span class="material-symbols-outlined">save</span> Оновити документ
+        </button>
+        <a href="/db/<%= collectionName %>" class="button cancel-button">
+            <span class="material-symbols-outlined">cancel</span> Скасувати
+        </a>
+    </div>
+</form>
+
+<%- include('partials/footer') %>

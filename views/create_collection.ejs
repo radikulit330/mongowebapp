@@ -1,0 +1,83 @@
+<%- include('partials/header') %>
+
+<h1><span class="material-symbols-outlined">add_box</span> Створити Нову Колекцію</h1>
+<p>Введіть назву для нової колекції у вашій базі даних MongoDB. Назва має бути унікальною і зазвичай дотримується певних правил (наприклад, не містить пробілів, використовує camelCase або snake_case).</p>
+
+<div class="form-container">
+    <%# Відображення помилок, якщо вони передані через query параметри %>
+    <% const urlParams = new URLSearchParams(locals.queryString || ''); %>
+    <% const formError = urlParams.get('error'); %>
+    <% if (formError) { %>
+        <div class="alert alert-danger"><%= decodeURIComponent(formError) %></div>
+    <% } %>
+
+    <form action="/create-collection" method="POST" class="standard-form"> <%# <--- ЗМІНЕНО ACTION ТУТ! %>
+        <div class="form-group">
+            <label for="collectionName">Назва колекції:</label>
+            <input type="text" id="collectionName" name="collectionName"
+                   placeholder="Наприклад: users або productOrders"
+                   pattern="^[a-zA-Z0-9_.-]+$"
+                   title="Назва може містити лише літери, цифри, _, . та -"
+                   required>
+            <p class="note">Назва не повинна містити пробілів або спеціальних символів (окрім _, ., -), та не починатись з "system.".</p>
+        </div>
+
+        <div class="form-actions-bottom">
+            <button type="submit" class="button save-button">
+                <span class="material-symbols-outlined">save</span> Створити колекцію
+            </button>
+            <a href="/" class="button cancel-button">
+                 <span class="material-symbols-outlined">cancel</span> Скасувати
+            </a>
+        </div>
+    </form>
+</div>
+
+<style> /* Стилі можна винести в style.css для кращої організації */
+    .form-container {
+        max-width: 600px;
+        background-color: var(--card-background);
+        padding: 30px;
+        border-radius: var(--border-radius);
+        margin-top: 20px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--box-shadow);
+    }
+
+    .standard-form .form-group {
+        margin-bottom: 20px;
+    }
+
+    .standard-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .standard-form input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        box-sizing: border-box;
+        background-color: var(--input-background);
+        color: var(--text-color);
+    }
+
+     .standard-form .note {
+        font-size: 0.85em;
+        color: var(--text-secondary-color);
+        margin-top: 5px;
+     }
+
+    .form-actions-bottom {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+        border-top: 1px solid var(--border-color);
+        padding-top: 20px;
+    }
+</style>
+
+<%- include('partials/footer') %>

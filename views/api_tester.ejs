@@ -1,0 +1,195 @@
+<%- include('partials/header', { title: title || 'API Тестувальник' }) %>
+
+<h1><span class="material-symbols-outlined">build_circle</span> Тестувальник API Запитів</h1>
+<p>Вставте URL вашого API запиту (наприклад, <code><%= defaultApiUrl %></code>) та натисніть "Надіслати Запит". Результат буде відображено у вигляді таблиці.</p>
+
+<div class="form-container api-tester-form">
+    <div class="form-group">
+        <label for="apiUrlInput">URL Запиту:</label>
+        <input type="text" id="apiUrlInput" class="form-control" placeholder="/api/data?target=username:collectionName" value="<%= defaultApiUrl %>">
+    </div>
+    <button id="sendApiRequestBtn" class="button save-button">
+        <span class="material-symbols-outlined">send</span> Надіслати Запит
+    </button>
+</div>
+
+<div id="apiRequestError" class="alert alert-danger" style="display:none; margin-top: 20px;"></div>
+
+<div id="apiRequestResultWrapper" style="margin-top: 20px;">
+    <h3 id="resultTableName" style="display:none;">Результати для: <span id="targetInfo"></span></h3>
+    <div id="apiRequestResultTable" class="table-wrapper">
+        </div>
+    <p id="noDataMessage" style="display:none;" class="info-card">Дані не знайдено або відповідь порожня.</p>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const apiUrlInput = document.getElementById('apiUrlInput');
+    const sendBtn = document.getElementById('sendApiRequestBtn');
+    const errorDiv = document.getElementById('apiRequestError');
+    const resultTableDiv = document.getElementById('apiRequestResultTable');
+    const resultTableName = document.getElementById('resultTableName');
+    const targetInfoSpan = document.getElementById('targetInfo');
+    const noDataMessage = document.getElementById('noDataMessage');
+
+    /**
+     * Допоміжна функція для форматування значень комірок таблиці
+     */
+    function displayCellContent(value) {
+        if (value === null || typeof value === 'undefined') return '<em class="null-value">NULL</em>';
+
+        let type = typeof value;
+        // Покращена перевірка для дат (включаючи рядки ISO)
+        if (value instanceof Date || (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/.test(value) && !isNaN(new Date(value).getTime()))) {
+            type = 'Date';
+        } else if (Array.isArray(value)) {
+            type = 'Array';
+        } else if (typeof value === 'object' && value !== null && value.$oid && typeof value.$oid === 'string' && /^[a-f\d]{24}$/i.test(value.$oid)) { // BSON ObjectId from MongoDB (часто так приходить з API)
+            type = 'ObjectIdBSON'; // Спеціальний тип для ObjectId з $oid
+            value = value.$oid;
+        } else if (typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)) { // Рядкове представлення ObjectId
+             type = 'ObjectIdString';
+        }
+
+
+        switch (type) {
+            case 'Date':
+                const dateValue = (value instanceof Date) ? value : new Date(value);
+                return dateValue.toLocaleString('uk-UA', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            case 'Boolean':
+                return value ? '<span class="badge boolean-true">Так</span>' : '<span class="badge boolean-false">Ні</span>';
+            case 'Array':
+                const arrStringified = JSON.stringify(value);
+                const arrPreview = arrStringified.length > 30 ? arrStringified.substring(0, 27) + '...' : arrStringified;
+                return `<span class="data-type-badge array">[Масив (${value.length})]</span> <code title="${arrStringified.replace(/"/g, '&quot;')}">${arrPreview}</code>`;
+            case 'ObjectIdBSON': // Обробка BSON ObjectId
+            case 'ObjectIdString': // Обробка рядкового ObjectId
+                 return `<code class="object-id-value" title="ObjectId">${value}</code>`;
+            case 'object': // Залишається для звичайних об'єктів
+                 const objStringified = JSON.stringify(value);
+                const objPreview = objStringified.length > 30 ? objStringified.substring(0, 27) + '...' : objStringified;
+                return `<span class="data-type-badge object">[Об\'єкт]</span> <code title="${objStringified.replace(/"/g, '&quot;')}">${objPreview}</code>`;
+            default: // String, Number
+                let stringValue = String(value);
+                if (stringValue.length > 70) {
+                    return `<span title="${stringValue.replace(/"/g, '&quot;')}">${stringValue.substring(0, 67)}...</span>`;
+                }
+                return stringValue;
+        }
+    }
+
+    /**
+     * Рендерить таблицю з отриманих JSON даних
+     */
+    function renderTable(jsonData, targetUsername, targetCollection) {
+        resultTableDiv.innerHTML = '';
+        errorDiv.style.display = 'none';
+        noDataMessage.style.display = 'none';
+        resultTableName.style.display = 'none';
+
+        if (!jsonData || !jsonData.data || !Array.isArray(jsonData.data) || jsonData.data.length === 0) {
+            noDataMessage.textContent = `Дані для "${targetUsername}:${targetCollection}" не знайдено або відповідь порожня. Можливо, колекція порожня або не існує.`;
+            noDataMessage.style.display = 'block';
+            return;
+        }
+
+        const documents = jsonData.data;
+        targetInfoSpan.textContent = `${targetUsername}:${targetCollection} (${jsonData.count} документів)`;
+        resultTableName.style.display = 'block';
+
+
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
+        const headerRow = document.createElement('tr');
+
+        const headers = new Set();
+        if (documents.length > 0) {
+            // Збираємо ключі з першого документа для базового порядку, потім додаємо решту
+             Object.keys(documents[0]).forEach(key => headers.add(key));
+             documents.forEach(doc => {
+                Object.keys(doc).forEach(key => headers.add(key));
+            });
+        }
+
+        const sortedHeaders = ['_id', ...Array.from(headers).filter(h => h !== '_id').sort()];
+
+
+        sortedHeaders.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+
+        documents.forEach(doc => {
+            const tr = document.createElement('tr');
+            sortedHeaders.forEach(header => {
+                const td = document.createElement('td');
+                td.setAttribute('data-label', header);
+                td.innerHTML = displayCellContent(doc[header]);
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        resultTableDiv.appendChild(table);
+    }
+
+    sendBtn.addEventListener('click', async () => {
+        const url = apiUrlInput.value.trim();
+        if (!url) {
+            errorDiv.textContent = 'Будь ласка, введіть URL API запиту.';
+            errorDiv.style.display = 'block';
+            resultTableDiv.innerHTML = '';
+            resultTableName.style.display = 'none';
+            noDataMessage.style.display = 'none';
+            return;
+        }
+
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="material-symbols-outlined spin">progress_activity</span> Обробка...';
+        errorDiv.style.display = 'none';
+        resultTableDiv.innerHTML = '';
+        resultTableName.style.display = 'none';
+        noDataMessage.style.display = 'none';
+
+
+        try {
+            const response = await fetch(url);
+            const jsonData = await response.json(); // Завжди намагаємось розпарсити JSON
+
+            if (!response.ok || jsonData.success === false) {
+                // Якщо success: false у тілі, використовуємо це повідомлення
+                throw new Error(jsonData.message || `Помилка сервера: ${response.status} ${response.statusText}`);
+            }
+
+            let targetUsername = jsonData.username || 'N/A';
+            let targetCollection = jsonData.collection || 'N/A';
+            // Спробуємо розпарсити з URL, якщо у відповіді немає
+            if (targetUsername === 'N/A' || targetCollection === 'N/A') {
+                try {
+                    const urlObj = new URL(url, window.location.origin); // Потрібен базовий URL, якщо URL відносний
+                    const targetParam = urlObj.searchParams.get('target');
+                    if(targetParam && targetParam.includes(':')) {
+                        [targetUsername, targetCollection] = targetParam.split(':', 2);
+                    }
+                } catch (e) { /* Ігноруємо помилку парсингу URL для target */ }
+            }
+            renderTable(jsonData, targetUsername, targetCollection);
+
+        } catch (err) {
+            console.error('API Request Error:', err);
+            errorDiv.textContent = `Помилка запиту: ${err.message}`;
+            errorDiv.style.display = 'block';
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<span class="material-symbols-outlined">send</span> Надіслати Запит';
+        }
+    });
+});
+</script>

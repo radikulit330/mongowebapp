@@ -1,0 +1,78 @@
+/* --- Анімація обертання для Preloader та Спінерів --- */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Анімація появи "зверху вниз" для Модального вікна --- */
+@keyframes slideInModal {
+  from {
+    transform: translateY(-30px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* --- Анімація "згасання" для фону модального вікна --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* --- Preloader Styles --- */
+#preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw; /* Використовуємо vw/vh для повного екрану */
+  height: 100vh;
+  background-color: var(--background-color); /* Фон відповідає темі */
+  z-index: 99999; /* Найвищий шар */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  visibility: visible;
+  /* Плавне зникнення */
+  transition: opacity 0.5s cubic-bezier(0.77, 0, 0.175, 1),
+    visibility 0s linear 0.5s;
+}
+
+#preloader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s cubic-bezier(0.77, 0, 0.175, 1),
+    visibility 0s linear 0.5s;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(var(--text-color-rgb, 33, 37, 41), 0.2); /* Потрібно додати --text-color-rgb */
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Додайте ці змінні до :root та .dark-theme в style.css, якщо ще не додали */
+/*
+:root {
+  --text-color-rgb: 33, 37, 41;
+  --primary-color_rgb: 0, 123, 255;
+  --accent-color_rgb: 90, 169, 241;
+}
+.dark-theme {
+  --text-color-rgb: 247, 250, 252;
+}
+*/
