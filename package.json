@@ -1,0 +1,39 @@
+{
+  "name": "mongo-web-admin",
+  "version": "1.0.0",
+  "description": "A web-based administration tool for MongoDB built with Node.js, Express, EJS, and Mongoose.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "seed": "node scripts/seedUser.js"
+  },
+  "engines": {
+    "node": "^16.0.0"
+  },
+  "keywords": [
+    "mongodb",
+    "admin",
+    "nodejs",
+    "express",
+    "ejs",
+    "mongoose"
+  ],
+  "author": "Your Name / Gemini Pro",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "json2csv": "^6.0.0-alpha.2",
+    "mongodb": "^6.16.0",
+    "mongoose": "^8.15.0",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

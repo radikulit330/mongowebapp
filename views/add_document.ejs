@@ -1,0 +1,41 @@
+<%- include('partials/header') %>
+
+<h1><span class="material-symbols-outlined">note_add</span> Додати новий документ до <strong><%= collectionName %></strong></h1>
+
+<form action="/db/<%= collectionName %>/add" method="POST" id="document-form" class="document-form structured-form">
+    <div id="fields-container">
+        <div class="field-row">
+            <input type="text" name="keys[]" placeholder="Ключ (напр., 'name')" required>
+            <select name="types[]" class="type-select">
+                <option value="String" selected>String</option>
+                <option value="Number">Number</option>
+                <option value="Boolean">Boolean</option>
+                <option value="Date">Date</option>
+                <option value="ObjectId">ObjectId</option>
+                <option value="Array">Array (JSON)</option>
+                <option value="Object">Object (JSON)</option>
+            </select>
+            <div class="value-input-container">
+                 <input type="text" name="values[]" placeholder="Значення" required>
+            </div>
+            <button type="button" class="button delete-button icon-only remove-field-btn" title="Видалити поле">
+                <span class="material-symbols-outlined">remove</span>
+            </button>
+        </div>
+    </div>
+
+    <button type="button" id="add-field-btn" class="button add-button">
+        <span class="material-symbols-outlined">add</span> Додати поле
+    </button>
+    <hr>
+    <div class="form-actions-bottom">
+        <button type="submit" class="button save-button">
+            <span class="material-symbols-outlined">save</span> Зберегти документ
+        </button>
+        <a href="/db/<%= collectionName %>" class="button cancel-button">
+             <span class="material-symbols-outlined">cancel</span> Скасувати
+        </a>
+    </div>
+</form>
+
+<%- include('partials/footer') %>

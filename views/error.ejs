@@ -1,0 +1,64 @@
+<%- include('partials/header') %>
+
+<div class="error-container">
+    <div class="error-icon">
+        <span class="material-symbols-outlined">
+            <%= (locals.error && locals.error.status === 404) ? 'find_in_page' : 'error' %>
+        </span>
+    </div>
+    <h1><%= (locals.error && locals.error.status) ? locals.error.status : 'Помилка' %></h1>
+    <h2><%= message %></h2>
+    <p>На жаль, сталася несподівана ситуація, або сторінку не знайдено.</p>
+
+    <%# Показуємо деталі помилки тільки в режимі розробки %>
+    <% if (process.env.NODE_ENV === 'development' && locals.error) { %>
+        <pre class="error-stack"><code><%= error.stack %></code></pre>
+    <% } %>
+
+    <a href="/" class="button">
+        <span class="material-symbols-outlined">home</span> Повернутися на головну
+    </a>
+</div>
+
+<style>
+    .error-container {
+        text-align: center;
+        padding: 50px 20px;
+        background-color: var(--card-background);
+        border-radius: 8px;
+        margin: 50px auto;
+        max-width: 700px;
+    }
+    .error-icon .material-symbols-outlined {
+        font-size: 80px;
+        color: var(--error-color, #dc3545);
+        margin-bottom: 20px;
+    }
+    .error-container h1 {
+        font-size: 4em;
+        margin: 0;
+        color: var(--text-secondary-color);
+    }
+     .error-container h2 {
+        font-size: 1.5em;
+        margin-top: 10px;
+        margin-bottom: 15px;
+        color: var(--text-color);
+     }
+    .error-stack {
+        text-align: left;
+        background-color: var(--code-background);
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        font-size: 0.85em;
+        border: 1px dashed var(--border-color);
+    }
+    .error-container .button {
+        margin-top: 20px;
+    }
+</style>
+
+<%- include('partials/footer') %>

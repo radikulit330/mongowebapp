@@ -1,0 +1,254 @@
+<%- include('partials/header') %>
+
+<%# --- Функція для відображення значення комірки --- %>
+<%
+const displayTableCell = (value, valueTypeDetectedByHelper) => {
+    if (value === null || typeof value === 'undefined') return '<em class="null-value">NULL</em>';
+
+    const type = valueTypeDetectedByHelper; // Використовуємо тип, переданий з хелпера
+
+    if (type === 'Date') {
+        // Перевіряємо, чи це дійсно об'єкт Date
+        const dateValue = (value instanceof Date) ? value : new Date(value);
+        if (!isNaN(dateValue.getTime())) {
+            return dateValue.toLocaleString('uk-UA', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        return String(value); // Якщо не валідна дата, показуємо як рядок
+    }
+    if (type === 'Boolean') return value ? '<span class="badge boolean-true">Так</span>' : '<span class="badge boolean-false">Ні</span>';
+    if (type === 'Array') {
+        const stringified = JSON.stringify(value);
+        const preview = stringified.length > 40 ? stringified.substring(0, 37) + '...' : stringified;
+        return `<span class="data-type-badge array">[Масив (${value.length})]</span> <code title="${stringified.replace(/"/g, '&quot;')}">${preview}</code>`;
+    }
+    if (type === 'Object' && !(value instanceof ObjectId) && !(value instanceof Date) ) { // Додаткова перевірка, щоб ObjectId/Date не потрапили сюди
+        const stringified = JSON.stringify(value);
+        const preview = stringified.length > 40 ? stringified.substring(0, 37) + '...' : stringified;
+        return `<span class="data-type-badge object">[Об'єкт]</span> <code title="${stringified.replace(/"/g, '&quot;')}">${preview}</code>`;
+    }
+    if (type === 'ObjectId') return `<code class="object-id-value">${value.toString()}</code>`;
+
+    let stringValue = String(value);
+    if (stringValue.length > 50) { // Обрізаємо довгі рядки
+        return `<span title="${stringValue.replace(/"/g, '&quot;')}">${stringValue.substring(0, 50)}...</span>`;
+    }
+    return stringValue;
+};
+%>
+
+<h1><span class="material-symbols-outlined">table_rows</span> Колекція: <strong><%= collectionName %></strong></h1>
+
+<% const urlParams = new URLSearchParams(locals.queryString || ''); %>
+<% const message = urlParams.get('message'); %>
+<% const error = urlParams.get('error'); %>
+<% if (message) { %><div class="alert alert-success"><%- decodeURIComponent(message) %></div><% } %>
+<% if (error) { %><div class="alert alert-danger"><%- decodeURIComponent(error) %></div><% } %>
+
+<% if (locals.searchMessage) { %>
+    <p class="search-notice"><%= locals.searchMessage %></p>
+<% } %>
+
+<div class="collection-info-grid">
+    <div class="info-card">
+        <h3><span class="material-symbols-outlined">query_stats</span> Статистика</h3>
+        <% if (stats && !stats.error) { %>
+            <ul>
+                <li><strong>Документів:</strong> <%= stats.count %></li>
+                <li><strong>Розмір даних:</strong> <%= stats.size %></li>
+                <li><strong>Розмір сховища:</strong> <%= stats.storageSize %></li>
+                <li><strong>Сер. розмір док.:</strong> <%= stats.avgObjSize %></li>
+                <li><strong>Кількість індексів:</strong> <%= stats.nindexes %></li>
+                <li><strong>Розмір індексів:</strong> <%= stats.totalIndexSize %></li>
+            </ul>
+        <% } else { %>
+            <p class="error-message"><%= stats ? stats.error : 'Не вдалося завантажити статистику.' %></p>
+        <% } %>
+    </div>
+
+    <div class="info-card">
+        <h3><span class="material-symbols-outlined">pin</span> Індекси</h3>
+         <% if (indexes && indexes.length > 0 && !(indexes[0].key && indexes[0].key.error)) { %>
+            <ul class="index-list">
+                <% indexes.forEach(index => { %>
+                    <li>
+                        <div>
+                            <strong><%= index.name %></strong>
+                            <code><%= JSON.stringify(index.key) %></code>
+                            <% if (index.unique) { %><span class="badge unique">Unique</span><% } %>
+                            <% if (index.sparse) { %><span class="badge sparse">Sparse</span><% } %>
+                            <% if (index.expireAfterSeconds != null) { %><span class="badge ttl">TTL: <%= index.expireAfterSeconds %>s</span><% } %>
+                        </div>
+                        <% if (index.name !== '_id_') { %>
+                            <button type="button" class="button delete-button icon-only delete-index-btn"
+                                    data-collection="<%= collectionName %>"
+                                    data-index="<%= index.name %>"
+                                    title="Видалити індекс">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        <% } %>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } else if (indexes && indexes[0] && indexes[0].key && indexes[0].key.error) { %>
+             <p class="error-message"><%- indexes[0].key.error %></p>
+        <% } else { %>
+            <p>Індекси не знайдено (окрім `_id_`).</p>
+        <% } %>
+        <hr>
+        <h4><span class="material-symbols-outlined">add_task</span> Створити Новий Індекс</h4>
+        <form id="create-index-form" action="/db/<%= collectionName %>/index" method="POST" class="create-index-form">
+            <div id="index-fields-container">
+                <div class="field-row index-field-row">
+                    <input type="text" name="fields[0][key]" placeholder="Назва поля" required>
+                    <select name="fields[0][value]">
+                        <option value="1">Ascending (1)</option>
+                        <option value="-1">Descending (-1)</option>
+                        <option value="text">Text</option>
+                        <option value="2dsphere">2dsphere (Гео)</option>
+                    </select>
+                    <button type="button" class="button delete-button icon-only remove-index-field-btn" title="Видалити поле">
+                        <span class="material-symbols-outlined">remove</span>
+                    </button>
+                </div>
+            </div>
+            <button type="button" id="add-index-field-btn" class="button add-button small-btn">
+                <span class="material-symbols-outlined">add</span> Додати поле
+            </button>
+            <div class="index-options">
+                <h5>Опції Індексу</h5>
+                <div class="form-group"><input type="text" name="options[name]" placeholder="Назва індексу (опціонально)"></div>
+                <label class="checkbox-label"><input type="checkbox" name="options[unique]" value="true"> Unique</label>
+                <label class="checkbox-label"><input type="checkbox" name="options[sparse]" value="true"> Sparse</label>
+                <div class="form-group"><input type="number" name="options[expireAfterSeconds]" placeholder="TTL (секунди)"></div>
+            </div>
+            <button type="submit" class="button save-button">Створити індекс</button>
+        </form>
+    </div>
+</div>
+
+<div class="advanced-filter-box">
+    <h3><span class="material-symbols-outlined">filter_alt</span> Розширений Фільтр</h3>
+    <form action="/db/<%= collectionName %>" method="GET" class="filter-form">
+        <input type="hidden" name="limit" value="<%= limit %>">
+        <div class="form-group">
+            <label for="field">Поле:</label>
+            <select name="field" id="field">
+                <option value="">-- Всі поля --</option>
+                <% if (typeof fields !== 'undefined') { %>
+                    <% fields.forEach(f => { %>
+                        <option value="<%= f %>" <%= (locals.currentField === f) ? 'selected' : '' %>>
+                            <%= f %>
+                        </option>
+                    <% }) %>
+                <% } %>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="value">Значення (містить):</label>
+            <input type="text" name="value" id="value" value="<%= locals.currentValue || '' %>" placeholder="Введіть значення...">
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="button filter-button">
+                <span class="material-symbols-outlined">search</span> Застосувати
+            </button>
+            <a href="/db/<%= collectionName %>" class="button cancel-button">
+                <span class="material-symbols-outlined">clear_all</span> Скинути
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="collection-actions">
+    <a href="/db/<%= collectionName %>/add" class="button add-button">
+        <span class="material-symbols-outlined">add_box</span> Додати документ
+    </a>
+    <div class="export-buttons">
+        <span>Експортувати як:</span>
+        <a href="/db/<%= collectionName %>/export/json<%= locals.queryString || '' %>" class="button export-button">
+            <span class="material-symbols-outlined">data_object</span> JSON
+        </a>
+        <a href="/db/<%= collectionName %>/export/csv<%= locals.queryString || '' %>" class="button export-button">
+            <span class="material-symbols-outlined">grid_on</span> CSV
+        </a>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <% if (tableHeaders && tableHeaders.length > 0) { %>
+                    <% tableHeaders.forEach(header => { %>
+                        <th><%= header %></th>
+                    <% }) %>
+                    <th>Дії</th>
+                <% } else if (documents && documents.length > 0) { %>
+                    <th>_id</th>
+                    <th>Дані</th>
+                    <th>Дії</th>
+                <% } else { %>
+                    <th>Дані</th>
+                    <th>Дії</th>
+                <% } %>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (documents && documents.length > 0) { %>
+                <% documents.forEach(doc => { %>
+                    <tr>
+                        <% if (tableHeaders && tableHeaders.length > 0) { %>
+                            <% tableHeaders.forEach(header => { %>
+                                <td data-label="<%= header %>">
+                                    <%- displayTableCell(doc[header], helpers.detectMongoType(doc[header])) %>
+                                </td>
+                            <% }) %>
+                        <% } else { %>
+                            <td data-label="ID"><code><%= doc._id %></code></td>
+                            <td data-label="Data">Повні дані документа не відображено через відсутність заголовків.</td>
+                        <% } %>
+                        <td data-label="Actions" class="actions-cell">
+                             <a href="/db/<%= collectionName %>/<%= doc._id %>/edit" class="button edit-button icon-only" title="Редагувати">
+                                <span class="material-symbols-outlined">edit</span>
+                            </a>
+                            <button type="button" class="button delete-button icon-only delete-doc-btn"
+                                    data-id="<%= doc._id %>"
+                                    data-collection="<%= collectionName %>"
+                                    title="Видалити">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="<%= (tableHeaders ? tableHeaders.length : 1) + 1 %>" class="no-documents-cell">
+                        Документи не знайдено.
+                        <% if (!locals.currentValue && !locals.searchTerm) { %>
+                            <a href="/db/<%= collectionName %>/add">Додати перший документ?</a>
+                        <% } %>
+                    </td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<% if (totalPages > 1) { %>
+    <nav class="pagination">
+        <ul>
+            <%
+                const params = new URLSearchParams(locals.queryString || '');
+                params.delete('page');
+                const baseQuery = params.toString() ? `&${params.toString()}` : '';
+            %>
+            <% if (currentPage > 1) { %><li><a href="?page=<%= currentPage - 1 %><%= baseQuery %>">« Попередня</a></li><% } %>
+            <% const maxPagesToShow = 5; let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2)); let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1); if (endPage - startPage + 1 < maxPagesToShow) { startPage = Math.max(1, endPage - maxPagesToShow + 1); } %>
+            <% if (startPage > 1) { %><li><a href="?page=1<%= baseQuery %>">1</a></li><% if (startPage > 2) { %> <li><span>...</span></li> <% } %><% } %>
+            <% for(let i = startPage; i <= endPage; i++) { %><li class="<%= i === currentPage ? 'active' : '' %>"><a href="?page=<%= i %><%= baseQuery %>"><%= i %></a></li><% } %>
+            <% if (endPage < totalPages) { %><% if (endPage < totalPages - 1) { %> <li><span>...</span></li> <% } %><li><a href="?page=<%= totalPages %><%= baseQuery %>"><%= totalPages %></a></li><% } %>
+            <% if (currentPage < totalPages) { %><li><a href="?page=<%= currentPage + 1 %><%= baseQuery %>">Наступна »</a></li><% } %>
+        </ul>
+    </nav>
+<% } %>
+
+<%- include('partials/footer') %>
